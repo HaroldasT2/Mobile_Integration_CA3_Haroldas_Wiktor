@@ -7,6 +7,6 @@
     <string name="people_count">People at the door: %d</string>
     <string name="save_button">Save the Number</string>
     <string name="average_people_count">Average number of people: %.1f</string>
-    <string name="show_average">Show Average</string>
+    <string name="show_average">Voice Changer</string>
     <string name="increment_button">Add Person</string>
 </resources>
