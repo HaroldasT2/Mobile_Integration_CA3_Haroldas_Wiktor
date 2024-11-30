@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -34,6 +37,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.stringResource
@@ -46,7 +52,6 @@ import com.example.homeguard.ui.theme.HomeGuardTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             HomeGuardTheme {
                 HomeGuardApp()
@@ -67,28 +72,38 @@ fun ImageBackground(){
 }
 
 @Composable
-//Used to create short cuts for the placement
 fun HomeGuardApp() {
-    Box(modifier = Modifier.fillMaxSize()) {
-        ImageBackground()
-        ArticleCard(
+    val navController = rememberNavController()
+    ImageBackground()
+    NavHost(navController = navController, startDestination = "home") {
+        //Home Page
+        composable("home") { HomePage(navController,
             title = stringResource(R.string.title_jetpack_compose_tutorial),
-            shortDescription = stringResource(R.string.compose_short_desc),
             image1 = painterResource(R.drawable.bg_compose_background),
             image2 = painterResource(R.drawable.microphone),
-            modifier = Modifier.fillMaxSize().padding(16.dp)
-        )
+            modifier = Modifier.fillMaxSize().padding(16.dp)) }
+
+
+
+        //Camera Page
+        composable("camera") { CameraPage(navController) }
+
+
+        //Notifications Page
+        composable("notifications") { NotificationsPage(navController) }
+
+
+        //Settings Page
+        composable("settings") { SettingsPage(navController) }
     }
 }
 
 @Composable
-private fun ArticleCard(
-    title: String,
-    shortDescription: String,
-    image1: Painter,
-    image2: Painter,
-    modifier: Modifier = Modifier,
-) {
+fun HomePage(navController: androidx.navigation.NavController,
+             title: String,
+             image1: Painter,
+             image2: Painter,
+             modifier: Modifier = Modifier,) {
 
 
 
@@ -141,17 +156,85 @@ private fun ArticleCard(
 
 
         Spacer(modifier = Modifier.height(150.dp))
-        Row (modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = { navController.navigate("home") }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.home),
+                    contentDescription = "Home",
+                    tint = Color.Black
+                )
+            }
 
+            IconButton(
+                onClick = { navController.navigate("camera") }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.camera),
+                    contentDescription = "Camera",
+                    tint = Color.Black
+                )
+            }
 
+            IconButton(
+                onClick = { navController.navigate("notifications") }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.bell),
+                    contentDescription = "Bell",
+                    tint = Color.Black
+                )
+            }
 
-
+            IconButton(
+                onClick = { navController.navigate("settings") }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.settings),
+                    contentDescription = "Settings",
+                    tint = Color.Black
+                )
+            }
         }
+
     }
 
 }
 
+@Composable
+fun CameraPage(navController: androidx.navigation.NavController) {
+    CenteredText("Camera Page")
+}
 
+@Composable
+fun NotificationsPage(navController: androidx.navigation.NavController) {
+    CenteredText("Notifications Page")
+}
+
+@Composable
+fun SettingsPage(navController: androidx.navigation.NavController) {
+    CenteredText("Settings Page")
+}
+
+@Composable
+fun CenteredText(text: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = text, style = MaterialTheme.typography.headlineMedium)
+    }
+}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -159,5 +242,6 @@ fun GreetingPreview() {
     HomeGuardTheme {
         ImageBackground()
         HomeGuardApp()
+
     }
 }
