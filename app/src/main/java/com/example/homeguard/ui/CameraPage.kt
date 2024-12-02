@@ -1,7 +1,9 @@
 package com.example.homeguard.ui
 
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,6 +23,7 @@ import androidx.navigation.NavController
 import com.example.homeguard.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 
 
 // Data class for Motion Events
@@ -45,46 +48,51 @@ fun CameraPage(navController: NavController) {
         bottomBar = { BottomNavBar(navController) },
         containerColor = Color.Black
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Camera Recordings",
-                fontSize = 24.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
+        BoxWithConstraints {
+            val isLargeScreen = maxWidth > 600.dp
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(mockMotionEvents.size) { index ->
-                    val event = mockMotionEvents[index]
-                    CameraEventCard(event)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Camera Recordings",
+                    fontSize = if (isLargeScreen) 30.sp else 24.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    items(mockMotionEvents.size) { index ->
+                        val event = mockMotionEvents[index]
+                        ExpandableCameraEventCard(event, isLargeScreen)
+                    }
                 }
             }
         }
     }
 }
 
-
-
 @Composable
-fun CameraEventCard(event: MotionEvent) {
-    var expanded by remember { mutableStateOf(false) } // Track expanded state
+fun ExpandableCameraEventCard(event: MotionEvent, isLargeScreen: Boolean) {
+    var isExpanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { expanded = !expanded }, // Toggle expanded state on click
+            .clickable { isExpanded = !isExpanded }
+            .animateContentSize()
+            .height(if (isExpanded) (if (isLargeScreen) 200.dp else 160.dp) else (if (isLargeScreen) 120.dp else 80.dp)),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -93,7 +101,7 @@ fun CameraEventCard(event: MotionEvent) {
                     painter = painterResource(id = event.thumbnail),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(64.dp)
+                        .size(if (isLargeScreen) 80.dp else 64.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.Gray),
                     contentScale = ContentScale.Crop
@@ -104,29 +112,23 @@ fun CameraEventCard(event: MotionEvent) {
                         text = event.timestamp,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontSize = if (isLargeScreen) 18.sp else 16.sp
                     )
                     Text(
                         text = event.description,
                         color = Color.LightGray,
-                        fontSize = 14.sp
+                        fontSize = if (isLargeScreen) 16.sp else 14.sp
                     )
                 }
             }
-
-            // Expandable Section
-            AnimatedVisibility(visible = expanded) {
-                Column(
+            // Expandable Content
+            if (isExpanded) {
+                Text(
+                    text = "Additional Details for Event ID: ${event.id}",
+                    color = Color.White,
+                    fontSize = if (isLargeScreen) 16.sp else 14.sp,
                     modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Divider(color = Color.Gray, thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Recording Details: ${event.id}",
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                }
+                )
             }
         }
     }

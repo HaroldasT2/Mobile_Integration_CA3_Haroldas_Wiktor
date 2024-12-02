@@ -28,6 +28,11 @@ import com.example.homeguard.ui.theme.HomeGuardTheme
 import com.example.homeguard.ui.BottomNavBar
 import com.example.homeguard.ui.NotificationsPage
 import com.example.homeguard.ui.SettingsPage
+import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.animation.animateColorAsState
+import com.example.homeguard.viewmodel.HomeViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,28 +59,45 @@ fun ImageBackground(){
 @Composable
 fun HomeGuardApp() {
     val navController = rememberNavController()
-
+    val homeViewModel: HomeViewModel = viewModel()
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
             HomePage(
                 navController = navController,
                 title = "HomeGuard",
                 image1 = painterResource(R.drawable.bg_compose_background),
-                image2 = painterResource(R.drawable.microphone)
+                image2 = painterResource(R.drawable.microphone),
+                viewModel = homeViewModel
             )
         }
-        composable("camera") { CameraPage(navController) }
-        composable("notifications") { NotificationsPage(navController) }
-        composable("settings") { SettingsPage(navController) }
+        composable("camera") {
+            Log.d("Navigation", "Navigating to CameraPage")
+            CameraPage(navController)
+        }
+        composable("notifications") {
+            Log.d("Navigation", "Navigating to NotificationsPage")
+            NotificationsPage(navController)
+        }
+        composable("settings") {
+            Log.d("Navigation", "Navigating to SettingsPage")
+            SettingsPage(navController)
+        }
     }
 }
 
-
 @Composable
-fun HomePage(navController: NavController, title: String, image1: Painter, image2: Painter) {
+fun HomePage(
+    navController: NavController,
+    title: String,
+    image1: Painter,
+    image2: Painter,
+    viewModel: HomeViewModel
+) {
+    val isButtonGreen by viewModel.isButtonGreen.collectAsState()
+
     Scaffold(
         bottomBar = { BottomNavBar(navController) },
-        containerColor = Color.Black // Background for the page
+        containerColor = Color.Black
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -94,10 +116,14 @@ fun HomePage(navController: NavController, title: String, image1: Painter, image
 
             Image(painter = image1, contentDescription = null, modifier = Modifier.size(300.dp))
 
-            var isGreen by remember { mutableStateOf(false) }
             Button(
-                colors = ButtonDefaults.buttonColors(containerColor = if (isGreen) Color.Green else Color.Gray),
-                onClick = { isGreen = !isGreen },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isButtonGreen) Color.Green else Color.Gray
+                ),
+                onClick = {
+                    Log.d("HomePage", "Button clicked. Current state: $isButtonGreen")
+                    viewModel.toggleButtonColor()
+                },
                 modifier = Modifier.padding(16.dp)
             ) {
                 Image(painter = image2, contentDescription = null, modifier = Modifier.width(100.dp))
@@ -111,7 +137,6 @@ fun HomePage(navController: NavController, title: String, image1: Painter, image
         }
     }
 }
-
 
 @Composable
 fun CenteredText(text: String) {

@@ -1,5 +1,7 @@
 package com.example.homeguard.ui
 
+import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -15,42 +17,38 @@ import com.example.homeguard.R
 @Composable
 fun BottomNavBar(navController: NavController) {
     BottomAppBar(
-        containerColor = Color.White, // Background color
-        contentColor = Color.Black    // Icon color
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { navController.navigate("home") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.home),
-                    contentDescription = "Home",
-                    tint = Color.Black
-                )
-            }
-            IconButton(onClick = { navController.navigate("camera") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.camera),
-                    contentDescription = "Camera",
-                    tint = Color.Black
-                )
-            }
-            IconButton(onClick = { navController.navigate("notifications") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.bell),
-                    contentDescription = "Notifications",
-                    tint = Color.Black
-                )
-            }
-            IconButton(onClick = { navController.navigate("settings") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.settings),
-                    contentDescription = "Settings",
-                    tint = Color.Black
-                )
+        containerColor = Color.White,
+        content = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {
+                    Log.d("Navigation", "BottomNavBar: Navigating to Home")
+                    navController.navigate("home")
+                }) {
+                    Icon(painter = painterResource(id = R.drawable.home), contentDescription = "Home", tint = Color.Black)
+                }
+                IconButton(onClick = {
+                    Log.d("Navigation", "BottomNavBar: Navigating to Camera")
+                    navController.navigate("camera")
+                }) {
+                    Icon(painter = painterResource(id = R.drawable.camera), contentDescription = "Camera", tint = Color.Black)
+                }
+                IconButton(onClick = {
+                    Log.d("Navigation", "BottomNavBar: Navigating to Notifications")
+                    navController.navigate("notifications")
+                }) {
+                    Icon(painter = painterResource(id = R.drawable.bell), contentDescription = "Notifications", tint = Color.Black)
+                }
+                IconButton(onClick = {
+                    Log.d("Navigation", "BottomNavBar: Navigating to Settings")
+                    navController.navigate("settings")
+                }) {
+                    Icon(painter = painterResource(id = R.drawable.settings), contentDescription = "Settings", tint = Color.Black)
+                }
             }
         }
-    }
+    )
 }
