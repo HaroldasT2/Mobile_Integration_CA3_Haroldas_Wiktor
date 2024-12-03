@@ -1,21 +1,22 @@
 package com.example.homeguard.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-
+import com.example.homeguard.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsPage(navController: NavController) {
+fun SettingsPage(navController: NavController, viewModel: HomeViewModel) {
+    val isSliderOn by viewModel.isSliderOn.collectAsState()
+    Log.d("SettingsPage", "Slider state in SettingsPage: $isSliderOn")
     Scaffold(
         topBar = {
             TopAppBar(
@@ -29,22 +30,36 @@ fun SettingsPage(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.Center,
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Settings coming soon.",
+                text = "Settings",
                 color = Color.White,
                 style = MaterialTheme.typography.headlineMedium
+            )
+
+
+            SettingToggle(
+                title = "Green Button Enabled",
+                isChecked = viewModel.isButtonGreen.collectAsState(initial = false).value,
+                onToggle = { viewModel.toggleButtonColor() }
+            )
+
+
+            SettingToggle(
+                title = "Slider Enabled",
+                isChecked = viewModel.isSliderOn.collectAsState(initial = false).value,
+                onToggle = { viewModel.toggleSlider() }
             )
         }
     }
 }
 
 @Composable
-fun SettingToggle(title: String) {
-    val checkedState = remember { mutableStateOf(false) }
+fun SettingToggle(title: String, isChecked: Boolean, onToggle: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -54,8 +69,8 @@ fun SettingToggle(title: String) {
     ) {
         Text(text = title, color = Color.White)
         Switch(
-            checked = checkedState.value,
-            onCheckedChange = { checkedState.value = it },
+            checked = isChecked,
+            onCheckedChange = onToggle,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = MaterialTheme.colorScheme.primary,
                 uncheckedThumbColor = Color.Gray

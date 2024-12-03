@@ -1,12 +1,13 @@
 package com.example.homeguard.ui
 
-
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,30 +21,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.homeguard.R
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-
-
-// Data class for Motion Events
-data class MotionEvent(
-    val id: Int,
-    val timestamp: String,
-    val description: String,
-    val thumbnail: Int
-)
-
-// Mock Data
-val mockMotionEvents = listOf(
-    MotionEvent(1, "2024-12-01 10:00", "Motion detected near the front door", R.drawable.ic_launcher_foreground),
-    MotionEvent(2, "2024-12-01 10:05", "Motion detected near the garage", R.drawable.ic_launcher_foreground),
-    MotionEvent(3, "2024-12-01 10:10", "Motion detected near the backyard", R.drawable.ic_launcher_foreground)
-)
+import com.example.homeguard.Recording
+import com.example.homeguard.viewmodel.HomeViewModel
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CameraPage(navController: NavController) {
+fun CameraPage(navController: NavController, viewModel: HomeViewModel) {
+    var recordings by remember { mutableStateOf(listOf<Recording>()) }
+
+    LaunchedEffect(Unit) {
+        viewModel.getRecordings { fetchedRecordings ->
+            recordings = fetchedRecordings
+        }
+    }
+
     Scaffold(
         bottomBar = { BottomNavBar(navController) },
         containerColor = Color.Black
@@ -66,9 +60,8 @@ fun CameraPage(navController: NavController) {
                 )
 
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    items(mockMotionEvents.size) { index ->
-                        val event = mockMotionEvents[index]
-                        ExpandableCameraEventCard(event, isLargeScreen)
+                    items(recordings) { recording ->
+                        ExpandableCameraEventCard(recording, isLargeScreen)
                     }
                 }
             }
@@ -76,9 +69,12 @@ fun CameraPage(navController: NavController) {
     }
 }
 
+
 @Composable
-fun ExpandableCameraEventCard(event: MotionEvent, isLargeScreen: Boolean) {
+fun ExpandableCameraEventCard(recording: Recording, isLargeScreen: Boolean) {
     var isExpanded by remember { mutableStateOf(false) }
+
+    Log.d("ExpandableCameraEventCard", "Image URL: ${recording.imageUrl}")
 
     Card(
         modifier = Modifier
@@ -97,34 +93,36 @@ fun ExpandableCameraEventCard(event: MotionEvent, isLargeScreen: Boolean) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = event.thumbnail),
+                AsyncImage(
+                    model = recording.imageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .size(if (isLargeScreen) 80.dp else 64.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.Gray),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    onLoading = { Log.d("CameraPage", "Loading image: ${recording.imageUrl}") },
+                    onError = { Log.e("CameraPage", "Failed to load image: ${recording.imageUrl}") },
+                    onSuccess = { Log.d("CameraPage", "Successfully loaded image: ${recording.imageUrl}") }
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = event.timestamp,
+                        text = recording.timestamp,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = if (isLargeScreen) 18.sp else 16.sp
                     )
                     Text(
-                        text = event.description,
+                        text = recording.description,
                         color = Color.LightGray,
                         fontSize = if (isLargeScreen) 16.sp else 14.sp
                     )
                 }
             }
-            // Expandable Content
             if (isExpanded) {
                 Text(
-                    text = "Additional Details for Event ID: ${event.id}",
+                    text = "Additional Details for Recording ID: ${recording.id}",
                     color = Color.White,
                     fontSize = if (isLargeScreen) 16.sp else 14.sp,
                     modifier = Modifier.padding(top = 8.dp)
@@ -133,5 +131,3 @@ fun ExpandableCameraEventCard(event: MotionEvent, isLargeScreen: Boolean) {
         }
     }
 }
-
-

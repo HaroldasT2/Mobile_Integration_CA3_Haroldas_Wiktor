@@ -1,5 +1,6 @@
 package com.example.homeguard
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,18 +29,22 @@ import com.example.homeguard.ui.theme.HomeGuardTheme
 import com.example.homeguard.ui.BottomNavBar
 import com.example.homeguard.ui.NotificationsPage
 import com.example.homeguard.ui.SettingsPage
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.animateColorAsState
 import com.example.homeguard.viewmodel.HomeViewModel
+import com.example.homeguard.viewmodel.HomeViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val application = this.application
+        val scope = CoroutineScope(Dispatchers.Main)
         setContent {
             HomeGuardTheme {
-                HomeGuardApp()
+                HomeGuardApp(application, scope)
             }
         }
     }
@@ -57,9 +62,14 @@ fun ImageBackground(){
 }
 
 @Composable
-fun HomeGuardApp() {
+fun HomeGuardApp(application: Application, scope: CoroutineScope) {
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(application, scope)
+    )
+    LaunchedEffect(Unit) {
+        homeViewModel.checkDatabasePopulated()
+    }
     val navController = rememberNavController()
-    val homeViewModel: HomeViewModel = viewModel()
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
             HomePage(
@@ -71,16 +81,13 @@ fun HomeGuardApp() {
             )
         }
         composable("camera") {
-            Log.d("Navigation", "Navigating to CameraPage")
-            CameraPage(navController)
+            CameraPage(navController, homeViewModel)
         }
         composable("notifications") {
-            Log.d("Navigation", "Navigating to NotificationsPage")
             NotificationsPage(navController)
         }
         composable("settings") {
-            Log.d("Navigation", "Navigating to SettingsPage")
-            SettingsPage(navController)
+            SettingsPage(navController, homeViewModel)
         }
     }
 }
@@ -94,6 +101,7 @@ fun HomePage(
     viewModel: HomeViewModel
 ) {
     val isButtonGreen by viewModel.isButtonGreen.collectAsState()
+    val isSliderOn by viewModel.isSliderOn.collectAsState()
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) },
@@ -121,7 +129,6 @@ fun HomePage(
                     containerColor = if (isButtonGreen) Color.Green else Color.Gray
                 ),
                 onClick = {
-                    Log.d("HomePage", "Button clicked. Current state: $isButtonGreen")
                     viewModel.toggleButtonColor()
                 },
                 modifier = Modifier.padding(16.dp)
@@ -131,8 +138,10 @@ fun HomePage(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Voice Changer", color = Color.White)
-                val checkedState = remember { mutableStateOf(false) }
-                Switch(checked = checkedState.value, onCheckedChange = { checkedState.value = it })
+                Switch(
+                    checked = isSliderOn,
+                    onCheckedChange = { viewModel.toggleSlider() }
+                )
             }
         }
     }
@@ -155,6 +164,6 @@ fun CenteredText(text: String) {
 fun GreetingPreview() {
     HomeGuardTheme {
         ImageBackground()
-        HomeGuardApp()
+        HomeGuardApp(application = Application(), scope = CoroutineScope(Dispatchers.Main))
     }
 }
