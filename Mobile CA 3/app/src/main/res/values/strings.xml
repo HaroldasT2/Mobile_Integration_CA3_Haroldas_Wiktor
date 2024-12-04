@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">HomeGuard</string>
+
+    <!-- Compose Article Screen -->
+    <string name="title_jetpack_compose_tutorial">HomeGuard</string>
+    <string name="compose_short_desc">HomeGuard is an security system, designed to keep users safe and to help them understand who is behind the door</string>
+    <string name="people_count">People at the door: %d</string>
+    <string name="save_button">Save the Number</string>
+    <string name="average_people_count">Average number of people: %.1f</string>
+    <string name="show_average">Voice Changer</string>
+    <string name="increment_button">Add Person</string>
+</resources>
