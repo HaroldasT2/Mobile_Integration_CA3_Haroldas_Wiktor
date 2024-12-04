@@ -84,7 +84,7 @@ fun HomeGuardApp(application: Application, scope: CoroutineScope) {
             CameraPage(navController, homeViewModel)
         }
         composable("notifications") {
-            NotificationsPage(navController)
+            NotificationsPage(navController, application)
         }
         composable("settings") {
             SettingsPage(navController, homeViewModel)

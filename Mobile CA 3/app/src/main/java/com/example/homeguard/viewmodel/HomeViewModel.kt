@@ -3,6 +3,8 @@ package com.example.homeguard.viewmodel
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -13,9 +15,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.example.homeguard.data.PreferencesManager
 
-class HomeViewModel(application: Application, private val scope: CoroutineScope) : AndroidViewModel(application) {
+import com.example.homeguard.data.PreferencesManager
+import com.example.homeguard.network.RetrofitInstance
+import com.example.homeguard.network.Notification
+import kotlinx.coroutines.withContext
+
+class HomeViewModel(application: Application, private val scope: CoroutineScope) : AndroidViewModel(application)  {
+    private val _notifications = MutableLiveData<List<Notification>>()
+    val notifications: LiveData<List<Notification>> get() = _notifications
+
     private val _isButtonGreen = MutableStateFlow(false)
     val isButtonGreen: StateFlow<Boolean> get() = _isButtonGreen
 
@@ -25,6 +34,7 @@ class HomeViewModel(application: Application, private val scope: CoroutineScope)
     private val recordingDao = AppDatabase.getDatabase(application, scope).recordingDao()
     private val preferencesManager = PreferencesManager(application)
     init {
+
         viewModelScope.launch {
             preferencesManager.isButtonGreen.collect { isGreen ->
                 Log.d("HomeViewModel", "Retrieved button state from DataStore: $isGreen")
@@ -75,6 +85,23 @@ class HomeViewModel(application: Application, private val scope: CoroutineScope)
             }
         }
     }
+
+    fun fetchNotifications() {
+        scope.launch {
+            try {
+                val response = RetrofitInstance.api.getNotifications()
+                withContext(Dispatchers.Main) {
+                    _notifications.value = response
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _notifications.value = emptyList()
+                }
+            }
+        }
+    }
+
+
 }
 
 class HomeViewModelFactory(
