@@ -1,55 +1,84 @@
 package com.example.homeguard.ui
 
+import android.app.Application
+import androidx.compose.runtime.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.homeguard.viewmodel.HomeViewModel
+import com.example.homeguard.viewmodel.HomeViewModelFactory
+import com.example.homeguard.network.Notification
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import androidx.navigation.NavController
-import com.example.homeguard.R
-
-
-// Mock Notifications Data
-data class Notification(val title: String, val timestamp: String, val description: String)
-
-val mockNotifications = listOf(
-    Notification("Motion Detected", "2024-12-02 10:00", "Motion detected at the front door."),
-    Notification("Camera Offline", "2024-12-01 22:00", "Camera is currently offline."),
-    Notification("Settings Updated", "2024-11-30 14:30", "You updated the Voice Changer settings.")
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsPage(navController: NavController) {
+fun NotificationsPage(
+    navController: NavController,
+    application: Application
+) {
+    // Uses the custom ViewModelFactory
+    val viewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(application, CoroutineScope(Dispatchers.IO))
+    )
+
+    val notifications by viewModel.notifications.observeAsState(emptyList())
+
+    // Triggers fetchNotifications when the screen is loaded
+    LaunchedEffect(Unit) {
+        viewModel.fetchNotifications()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Notifications") },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
+                title = { Text(text = "Notifications") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             )
         },
-        bottomBar = { BottomNavBar(navController) }
+        bottomBar = { BottomNavBar(navController) },
+        containerColor = Color.Black
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "No notifications yet.",
-                color = Color.White,
-                style = MaterialTheme.typography.headlineMedium
-            )
+        if (notifications.isEmpty()) {
+            // Shows "No notifications yet" message when there are no notifications
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .padding(paddingValues),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "No notifications yet.",
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            // Shows a list of notifications
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                items(notifications) { notification ->
+                    NotificationCard(notification)
+                }
+            }
         }
     }
 }
@@ -57,29 +86,26 @@ fun NotificationsPage(navController: NavController) {
 @Composable
 fun NotificationCard(notification: Notification) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.DarkGray),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.DarkGray
+        ),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = notification.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmall,
                 color = Color.White
             )
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = notification.timestamp,
-                fontSize = 12.sp,
+                text = notification.message,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.LightGray
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = notification.description,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
+
         }
     }
 }
